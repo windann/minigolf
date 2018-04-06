@@ -1,10 +1,14 @@
 from collections import deque
 
+
 class Player:
-    def __init__(self,name):
+
+    def __init__(self, name):
         self._name = name
+
     def __str__(self):
         return 'Игрок: {}'.format(self._name)
+
     @property
     def name(self):
         return self._name
@@ -34,9 +38,9 @@ class Match:
 
 
 class HitsMatch(Match):
-    def __init__(self,holes,players):
-        super().__init__(holes,players)
-        self.hit_list = [{'номер': i, 'удар': 0 } for i in range(len(self.players))]
+    def __init__(self, holes, players):
+        super().__init__(holes, players)
+        self.hit_list = [{'номер': i, 'удар': 0} for i in range(len(self.players))]
         # список игроков попавших в лунку за круг
         self.success_list = []
 
@@ -49,7 +53,6 @@ class HitsMatch(Match):
 
         self.hit_list = deque([{'номер': i, 'удар': 0} for i in range(len(self.players))])
         self.hit_list.rotate(-self.cur_hole)
-
 
     def cleaning_players(self):
         for i in self.success_list[::-1]:
@@ -66,7 +69,8 @@ class HitsMatch(Match):
                     self.score_list[self.cur_hole][self.hit_list[self.cur_player]['номер']] = 1
                 # если игрок попал не с первого раза
                 else:
-                    self.score_list[self.cur_hole][self.hit_list[self.cur_player]['номер']] = self.hit_list[self.cur_player]['удар'] + 1
+                    self.score_list[self.cur_hole][self.hit_list[self.cur_player]['номер']] = \
+                    self.hit_list[self.cur_player]['удар'] + 1
                 self.success_list.append(self.cur_player)
             else:
                 self.hit_list[self.cur_player]['удар'] += 1
@@ -96,8 +100,8 @@ class HitsMatch(Match):
 
 
 class HolesMatch(Match):
-    def __init__(self,holes,players):
-        super().__init__(holes,players)
+    def __init__(self, holes, players):
+        super().__init__(holes, players)
         # текущий круг
         self.round = 0
         # попадание за круг
