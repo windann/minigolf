@@ -12,7 +12,7 @@ class PlayerTestCase(unittest.TestCase):
     def test_str(self):
         p = Player('A')
 
-        self.assertEqual(str(p), 'Игрок: A')
+        self.assertEqual(str(p), 'Player: A')
 
 
 class MatchTestCase(unittest.TestCase):
@@ -62,7 +62,7 @@ class HitsMatchTestCase(unittest.TestCase):
         players = [Player('A'), Player('B'), Player('C')]
         m = HitsMatch(3, players)
         m.change_hole()
-        self.assertEqual(m.hit_list,deque([{'номер': 1,'удар': 0},{'номер': 2,'удар': 0},{'номер': 0,'удар': 0}]))
+        self.assertEqual(m.hit_list,deque([{'number': 1,'hit': 0},{'number': 2,'hit': 0},{'number': 0,'hit': 0}]))
 
 
 class HolesMatchTestCase(unittest.TestCase):

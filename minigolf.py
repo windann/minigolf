@@ -7,7 +7,7 @@ class Player:
         self._name = name
 
     def __str__(self):
-        return 'Игрок: {}'.format(self._name)
+        return 'Player: {}'.format(self._name)
 
     @property
     def name(self):
@@ -15,9 +15,9 @@ class Player:
 
 
 class Match:
+    MAX_HIT = 10
 
     def __init__(self, holes, players):
-        self.MAX_HIT = 10
         self.holes = holes
         self.players = [player for player in players]
 
@@ -65,7 +65,7 @@ class HitsMatch(Match):
 
     def __init__(self, holes, players):
         super().__init__(holes, players)
-        self.hit_list = [{'номер': i, 'удар': 0} for i in range(len(self.players))]
+        self.hit_list = [{'number': i, 'hit': 0} for i in range(len(self.players))]
         # список игроков попавших в лунку за круг
         self.success_list = []
 
@@ -76,7 +76,7 @@ class HitsMatch(Match):
             self._finished = True
             return None
 
-        self.hit_list = deque([{'номер': i, 'удар': 0} for i in range(len(self.players))])
+        self.hit_list = deque([{'number': i, 'hit': 0} for i in range(len(self.players))])
         self.hit_list.rotate(-self.cur_hole)
 
     def cleaning_players(self):
@@ -86,18 +86,18 @@ class HitsMatch(Match):
         self.success_list = []
 
     def success_hit(self):
-        if self.hit_list[self.cur_player]['удар'] == 0:
-            self.score_list[self.cur_hole][self.hit_list[self.cur_player]['номер']] = 1
+        if self.hit_list[self.cur_player]['hit'] == 0:
+            self.score_list[self.cur_hole][self.hit_list[self.cur_player]['number']] = 1
         # если игрок попал не с первого раза
         else:
-            self.score_list[self.cur_hole][self.hit_list[self.cur_player]['номер']] = self.hit_list[self.cur_player][
-                                                                                          'удар'] + 1
+            self.score_list[self.cur_hole][self.hit_list[self.cur_player]['number']] = self.hit_list[self.cur_player][
+                                                                                          'hit'] + 1
         self.success_list.append(self.cur_player)
 
     def fail_hit(self):
-        self.hit_list[self.cur_player]['удар'] += 1
-        if self.hit_list[self.cur_player]['удар'] == self.MAX_HIT - 1:
-            self.score_list[self.cur_hole][self.hit_list[self.cur_player]['номер']] = self.MAX_HIT
+        self.hit_list[self.cur_player]['hit'] += 1
+        if self.hit_list[self.cur_player]['hit'] == Match.MAX_HIT - 1:
+            self.score_list[self.cur_hole][self.hit_list[self.cur_player]['number']] = Match.MAX_HIT
             self.success_list.append(self.cur_player)
 
     def round_analisys(self):
@@ -167,7 +167,7 @@ class HolesMatch(Match):
                 self.cur_player = 0
                 self.round += 1
 
-                if self.round == self.MAX_HIT:
+                if self.round == Match.MAX_HIT:
                     for i in range(self.holes):
                         self.score_list[self.cur_hole][i] = 0
                     self.change_hole()
