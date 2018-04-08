@@ -96,7 +96,6 @@ class HitsMatch(Match):
 
     def fail_hit(self):
         self.hit_list[self.cur_player]['удар'] += 1
-        # если он и на 9 раз не попал
         if self.hit_list[self.cur_player]['удар'] == self.MAX_HIT - 1:
             self.score_list[self.cur_hole][self.hit_list[self.cur_player]['номер']] = self.MAX_HIT
             self.success_list.append(self.cur_player)
@@ -167,7 +166,7 @@ class HolesMatch(Match):
             else:
                 self.cur_player = 0
                 self.round += 1
-                # если это уже 10ый круг, то всем ставим 0 очков и переход на следующую лунку
+
                 if self.round == self.MAX_HIT:
                     for i in range(self.holes):
                         self.score_list[self.cur_hole][i] = 0
