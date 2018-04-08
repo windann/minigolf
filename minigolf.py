@@ -24,9 +24,7 @@ class Match:
         self._finished = False
         self.score_list = [[None for _ in range(len(self.players))] for _ in range(self.holes)]
 
-        # текущий игрок
         self.cur_player = 0
-        # текущая лунка
         self.cur_hole = 0
 
     @property
@@ -46,18 +44,25 @@ class Match:
         else:
             raise RuntimeError
 
-    def hit(self):
+    def hit(self, success=False):
+
         if self.finished:
             raise RuntimeError
         else:
             if success:
-                pass
-                if self.cur_player == len(self.players):
-                    pass
+                self.success_hit()
+            else:
+                self.fail_hit()
 
+            self.cur_player += 1
+            self.round_analisys()
+
+        if self.cur_hole == self.holes and self.cur_player == len(self.players):
+            self._finished = True
 
 
 class HitsMatch(Match):
+
     def __init__(self, holes, players):
         super().__init__(holes, players)
         self.hit_list = [{'номер': i, 'удар': 0} for i in range(len(self.players))]
@@ -80,42 +85,39 @@ class HitsMatch(Match):
 
         self.success_list = []
 
-    def hit(self, success=False):
-        if self.finished:
-            raise RuntimeError
+    def success_hit(self):
+        if self.hit_list[self.cur_player]['удар'] == 0:
+            self.score_list[self.cur_hole][self.hit_list[self.cur_player]['номер']] = 1
+        # если игрок попал не с первого раза
         else:
-            if success:
-                if self.hit_list[self.cur_player]['удар'] == 0:
-                    self.score_list[self.cur_hole][self.hit_list[self.cur_player]['номер']] = 1
-                # если игрок попал не с первого раза
-                else:
-                    self.score_list[self.cur_hole][self.hit_list[self.cur_player]['номер']] = \
-                    self.hit_list[self.cur_player]['удар'] + 1
-                self.success_list.append(self.cur_player)
-            else:
-                self.hit_list[self.cur_player]['удар'] += 1
-                # если он и на 9 раз не попал
-                if self.hit_list[self.cur_player]['удар'] == self.MAX_HIT - 1:
-                    self.score_list[self.cur_hole][self.hit_list[self.cur_player]['номер']] = self.MAX_HIT
-                    self.success_list.append(self.cur_player)
+            self.score_list[self.cur_hole][self.hit_list[self.cur_player]['номер']] = self.hit_list[self.cur_player][
+                                                                                          'удар'] + 1
+        self.success_list.append(self.cur_player)
 
-            self.cur_player += 1
+    def fail_hit(self):
+        self.hit_list[self.cur_player]['удар'] += 1
+        # если он и на 9 раз не попал
+        if self.hit_list[self.cur_player]['удар'] == self.MAX_HIT - 1:
+            self.score_list[self.cur_hole][self.hit_list[self.cur_player]['номер']] = self.MAX_HIT
+            self.success_list.append(self.cur_player)
 
-            if self.cur_player == len(self.hit_list):
+    def round_analisys(self):
+        if self.cur_player == len(self.hit_list):
 
-                if self.success_list:
-                    self.cleaning_players()
+            if self.success_list:
+                self.cleaning_players()
 
-                    if not self.hit_list:
-                        self.change_hole()
+                if not self.hit_list:
+                    self.change_hole()
 
-                self.cur_player = 0
+            self.cur_player = 0
 
     def get_winners(self):
         return self.get_all_winners(min)
 
 
 class HolesMatch(Match):
+
     def __init__(self, holes, players):
         super().__init__(holes, players)
         # текущий круг
@@ -135,53 +137,41 @@ class HolesMatch(Match):
         self.flag_hit = False
         self.round = 0
 
-    def hit(self, success=False):
-        if self.finished:
-            raise RuntimeError
-        else:
-            if success:
-                # если удар успешный, записали очко в таблицу и зафиксировали попадание
-                self.score_list[self.cur_hole][self.player_change[self.cur_player]] = 1
-                self.flag_hit = True
+    def end_of_hole_whithout_success(self):
+        for i in range(self.holes):
+            if self.score_list[self.cur_hole][i] is None:
+                self.score_list[self.cur_hole][i] = 0
 
-            # в конце удара переходим к следующему игроку
-            self.cur_player += 1
+    def success_hit(self):
+        # если удар успешный, записали очко в таблицу и зафиксировали попадание
+        self.score_list[self.cur_hole][self.player_change[self.cur_player]] = 1
+        self.flag_hit = True
 
-            # если все уже ударили, ход переходит к 1ому и переход на следующую лунку и меняем очерёдность игроков
-            if self.cur_player == len(self.players):
-                # если есть попадание
-                if self.flag_hit:
-                    self.change_round()
-                    # у тех кто не забил, ставим 0
+    def fail_hit(self):
+        pass
+
+    def round_analisys(self):
+        # если все уже ударили, ход переходит к 1ому и переход на следующую лунку и меняем очерёдность игроков
+        if self.cur_player == len(self.players):
+            # если есть попадание
+            if self.flag_hit:
+                self.change_round()
+                # у тех кто не забил, ставим 0
+                self.end_of_hole_whithout_success()
+
+                self.change_hole()
+                if self.cur_hole == self.holes:
+                    self._finished = True
+
+            # если никто не забил, начинаем новый круг с 1ого игрока
+            else:
+                self.cur_player = 0
+                self.round += 1
+                # если это уже 10ый круг, то всем ставим 0 очков и переход на следующую лунку
+                if self.round == self.MAX_HIT:
                     for i in range(self.holes):
-                        if self.score_list[self.cur_hole][i] is None:
-                            self.score_list[self.cur_hole][i] = 0
-
+                        self.score_list[self.cur_hole][i] = 0
                     self.change_hole()
-                    if self.cur_hole == self.holes:
-                        self._finished = True
-
-                # если никто не забил, начинаем новый круг с 1ого игрока
-                else:
-                    self.cur_player = 0
-                    self.round += 1
-                    # если это уже 10ый круг, то всем ставим 0 очков и переход на следующую лунку
-                    if self.round == self.MAX_HIT:
-                        for i in range(self.holes):
-                            self.score_list[self.cur_hole][i] = 0
-                        self.change_hole()
-
-            if self.cur_hole == self.holes and self.cur_player == len(self.players):
-                self._finished = True
 
     def get_winners(self):
         return self.get_all_winners(max)
-
-"""players = [Player('A'), Player('B'), Player('C')]
-
-m = Match(3, players)
-mHi = HitsMatch(3, players)
-mHo = HolesMatch(3, players)
-print(isinstance(m,HitsMatch))
-print(isinstance(m,Match))
-print(isinstance(mHo,HitsMatch))"""
