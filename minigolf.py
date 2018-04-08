@@ -15,7 +15,9 @@ class Player:
 
 
 class Match:
+
     def __init__(self, holes, players):
+        self.MAX_HIT = 10
         self.holes = holes
         self.players = [player for player in players]
 
@@ -35,6 +37,24 @@ class Match:
         table = [tuple(elem) for elem in self.score_list]
         table.insert(0, tuple(player.name for player in self.players))
         return table
+
+    def get_all_winners(self,func):
+        if self.finished:
+            final_score = {i: sum([row[i] for row in self.score_list]) for i in range(len(self.score_list))}
+            return [self.players[player] for player, score in final_score.items()
+                        if score == func(final_score.values())]
+        else:
+            raise RuntimeError
+
+    def hit(self):
+        if self.finished:
+            raise RuntimeError
+        else:
+            if success:
+                pass
+                if self.cur_player == len(self.players):
+                    pass
+
 
 
 class HitsMatch(Match):
@@ -75,8 +95,8 @@ class HitsMatch(Match):
             else:
                 self.hit_list[self.cur_player]['удар'] += 1
                 # если он и на 9 раз не попал
-                if self.hit_list[self.cur_player]['удар'] == 9:
-                    self.score_list[self.cur_hole][self.hit_list[self.cur_player]['номер']] = 10
+                if self.hit_list[self.cur_player]['удар'] == self.MAX_HIT - 1:
+                    self.score_list[self.cur_hole][self.hit_list[self.cur_player]['номер']] = self.MAX_HIT
                     self.success_list.append(self.cur_player)
 
             self.cur_player += 1
@@ -92,11 +112,7 @@ class HitsMatch(Match):
                 self.cur_player = 0
 
     def get_winners(self):
-        if self.finished:
-            final_score = {i: sum([row[i] for row in self.score_list]) for i in range(len(self.score_list))}
-            return [self.players[player] for player, score in final_score.items() if score == min(final_score.values())]
-        else:
-            raise RuntimeError
+        return self.get_all_winners(min)
 
 
 class HolesMatch(Match):
@@ -150,7 +166,7 @@ class HolesMatch(Match):
                     self.cur_player = 0
                     self.round += 1
                     # если это уже 10ый круг, то всем ставим 0 очков и переход на следующую лунку
-                    if self.round == 10:
+                    if self.round == self.MAX_HIT:
                         for i in range(self.holes):
                             self.score_list[self.cur_hole][i] = 0
                         self.change_hole()
@@ -159,8 +175,13 @@ class HolesMatch(Match):
                 self._finished = True
 
     def get_winners(self):
-        if self.finished:
-            final_score = {i: sum([row[i] for row in self.score_list]) for i in range(len(self.score_list))}
-            return [self.players[player] for player, score in final_score.items() if score == max(final_score.values())]
-        else:
-            raise RuntimeError
+        return self.get_all_winners(max)
+
+"""players = [Player('A'), Player('B'), Player('C')]
+
+m = Match(3, players)
+mHi = HitsMatch(3, players)
+mHo = HolesMatch(3, players)
+print(isinstance(m,HitsMatch))
+print(isinstance(m,Match))
+print(isinstance(mHo,HitsMatch))"""
